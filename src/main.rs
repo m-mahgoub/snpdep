@@ -24,13 +24,21 @@ fn validate_bam_file(val: &str) -> Result<String, String> {
     if val.to_lowercase().ends_with(".bam") | val.to_lowercase().ends_with(".cram") {
         Ok(val.to_string())
     } else {
-        Err("File path must end with '.bam' or '.cram'".to_string())
+        Err("Reads File must end with '.bam' or '.cram'".to_string())
     }
     #[cfg(not(target_os = "linux"))]
     if val.to_lowercase().ends_with(".bam") {
         Ok(val.to_string())
     } else {
-        Err("File path must end with '.bam'".to_string())
+        Err("Reads File must end with '.bam'".to_string())
+    }
+}
+
+fn validate_vcf_file(val: &str) -> Result<String, String> {
+    if val.to_lowercase().ends_with(".vcf") | val.to_lowercase().ends_with("vcf.gz") {
+        Ok(val.to_string())
+    } else {
+        Err("VCF File must end with '.vcf' or '.vcf.gz'".to_string())
     }
 }
 
@@ -74,7 +82,7 @@ fn validate_unique_format_id(
 )]
 struct Cli {
     /// Path to VCF file containing haplotype-resolved variants.
-    #[arg(value_name = "INPUT_VCF", required = true, index = 1)]
+    #[arg(value_name = "INPUT_VCF", required = true, index = 1, value_parser=clap::builder::ValueParser::new(validate_vcf_file))]
     input_vcf: Option<String>,
     /// Path to BAM/CRAM reads file.
     #[arg(value_name = "READS",required=true, index=2,value_parser=clap::builder::ValueParser::new(validate_bam_file))]
@@ -84,7 +92,8 @@ struct Cli {
         short = 'o',
         long = "output",
         value_name = "OUTPUT_VCP",
-        required = true
+        required = true,
+        value_parser=clap::builder::ValueParser::new(validate_vcf_file)
     )]
     output_vcf: Option<String>,
     /// Reads file format.
@@ -121,6 +130,10 @@ struct Cli {
     /// Number of threads to use.
     #[arg(short, long, value_name = "NUM_THREADS", default_value = "1")]
     threads: Option<usize>,
+
+    // Hidden argument for printing arguments as markdown
+    #[arg(long, hide = true)]
+    markdown_help: bool,
 }
 enum RecordData {
     Success {
@@ -219,6 +232,10 @@ fn process_bam_data(
 
 fn main() {
     let cli = Cli::parse();
+    // Printing Help as markdown, invoked as: `$ my-app --markdown-help`
+    if cli.markdown_help {
+        clap_markdown::print_help_markdown::<Cli>();
+    }
     let bcf_path = &cli.input_vcf.unwrap();
     let bam_path = &cli.reads.unwrap();
     let out_vcf_path = cli.output_vcf.unwrap();
@@ -227,6 +244,8 @@ fn main() {
         eprintln!("Input and Output VCF paths are the same! Use different paths");
         std::process::exit(0)
     };
+    // set output compression
+    let is_out_vcf_uncompressed: bool = out_vcf_path.to_lowercase().ends_with(".vcf");
     let reads_format = cli.reads_format.unwrap();
     let chunk_size = cli.chunksize.unwrap();
     let num_threads = cli.threads.unwrap();
@@ -266,7 +285,8 @@ fn main() {
     let mut out_vcf_header = bcfHeader::from_template(bcf_header_view);
     // confirm the new header ID is not already present
     out_vcf_header.push_record(new_format_line.as_bytes());
-    let mut out_vcf = bcfWriter::from_path(out_vcf_path, &out_vcf_header, true, Vcf).unwrap();
+    let mut out_vcf =
+        bcfWriter::from_path(out_vcf_path, &out_vcf_header, is_out_vcf_uncompressed, Vcf).unwrap();
 
     let mut records: Vec<_> = bcf_reader.records().collect::<Vec<_>>();
     println!("");
