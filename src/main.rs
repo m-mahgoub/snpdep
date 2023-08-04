@@ -83,13 +83,13 @@ fn validate_unique_format_id(
     about = "Program to calculate haplotype-specific depth from BAM/CRAM files at positions provided in a haplotype-resolved VCF file."
 )]
 struct Cli {
-    /// Path to VCF file containing haplotype-resolved variants.
+    /// Path to VCF file containing haplotype-resolved variants. Both uncompressed `.vcf` and compressed `.vcf.gz` files are supported
     #[arg(value_name = "INPUT_VCF", required = true, index = 1, value_parser=clap::builder::ValueParser::new(validate_vcf_file))]
     input_vcf: Option<String>,
     /// Path to BAM/CRAM reads file.
     #[arg(value_name = "READS",required=true, index=2,value_parser=clap::builder::ValueParser::new(validate_bam_file))]
     reads: Option<String>,
-    /// Path to Output annotated VCF file.
+    /// Path to the output annotated VCF file. Compression will be inferred from the file extension: `.vcf` for uncompressed and `.vcf.gz` for compressed output.
     #[arg(
         short = 'o',
         long = "output",
@@ -98,7 +98,7 @@ struct Cli {
         value_parser=clap::builder::ValueParser::new(validate_vcf_file)
     )]
     output_vcf: Option<String>,
-    /// Reads file format.
+    /// Specifies the reads file format.
     #[arg(short='f', long="reads-format", value_name = "READS_FORMAT", value_parser=["bam","cram"], default_value="bam")]
     reads_format: Option<String>,
     /// Path to the reference FASTA file (required if `--reads-format cram`).
@@ -115,10 +115,10 @@ struct Cli {
     /// Minimum read coverage required at a position to be annotated.
     #[arg(long = "min-count", value_name = "MIN_COUNT", default_value = "1")]
     min_count: Option<i32>,
-    /// Number of SNPs processed by a thread each iteration.
+    /// Number of SNPs processed by a thread in each iteration.
     #[arg(short, long, value_name = "CHUNK_SIZE", default_value = "1000")]
     chunksize: Option<usize>,
-    /// Unique ID for new VCF format field (e.g RNA, K4me3), max 5 characters.
+    /// Unique ID for the new VCF format field (e.g RNA, K4me3), max 5 characters.
     #[arg(long="format-field-id", value_name = "FORMAT_ID", default_value = "RC",value_parser=clap::builder::ValueParser::new(validate_format_id))]
     format_id: Option<String>,
     /// Short description for new VCF format field (e.g RNAseq, H3K4me3).
