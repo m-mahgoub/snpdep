@@ -130,10 +130,6 @@ struct Cli {
     /// Number of threads to use.
     #[arg(short, long, value_name = "NUM_THREADS", default_value = "1")]
     threads: Option<usize>,
-
-    // Hidden argument for printing arguments as markdown
-    #[arg(long, hide = true)]
-    markdown_help: bool,
 }
 enum RecordData {
     Success {
@@ -232,10 +228,6 @@ fn process_bam_data(
 
 fn main() {
     let cli = Cli::parse();
-    // Printing Help as markdown, invoked as: `$ my-app --markdown-help`
-    if cli.markdown_help {
-        clap_markdown::print_help_markdown::<Cli>();
-    }
     let bcf_path = &cli.input_vcf.unwrap();
     let bam_path = &cli.reads.unwrap();
     let out_vcf_path = cli.output_vcf.unwrap();
