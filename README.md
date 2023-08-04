@@ -4,14 +4,14 @@ Rust Program to calculate haplotype-specific depth from BAM/CRAM files at positi
 ## Usage 
 
 ```text
-Usage: snpdep [OPTIONS] --output <OUTPUT_VCP> <INPUT_VCF> <READS>
+Usage: snpdep [OPTIONS] --output <OUTPUT_VCF> <INPUT_VCF> <READS>
 
 Arguments:
   <INPUT_VCF>  Path to VCF file containing haplotype-resolved variants
   <READS>      Path to BAM/CRAM reads file
 
 Options:
-  -o, --output <OUTPUT_VCP>
+  -o, --output <OUTPUT_VCF>
           Path to Output annotated VCF file
   -f, --reads-format <READS_FORMAT>
           Reads file format [default: bam] [possible values: bam, cram]
