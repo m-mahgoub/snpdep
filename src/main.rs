@@ -29,6 +29,8 @@ fn validate_bam_file(val: &str) -> Result<String, String> {
     #[cfg(not(target_os = "linux"))]
     if val.to_lowercase().ends_with(".bam") {
         Ok(val.to_string())
+    } else if val.to_lowercase().ends_with(".cram") {
+        Err("CRAM files are supported only in Linux OS".to_string())
     } else {
         Err("Reads File must end with '.bam'".to_string())
     }
@@ -239,16 +241,12 @@ fn main() {
     // set output compression
     let is_out_vcf_uncompressed: bool = out_vcf_path.to_lowercase().ends_with(".vcf");
     let reads_format = cli.reads_format.unwrap();
-    let chunk_size = cli.chunksize.unwrap();
-    let num_threads = cli.threads.unwrap();
-    let min_count = cli.min_count.unwrap();
-    let min_mapq = cli.min_mapq.unwrap();
-    let format_id = cli.format_id.unwrap();
-    let format_name = cli.format_name.unwrap();
-    let new_format_line = format!(
-        r#"##FORMAT=<ID={},Number=.,Type=Integer,Description="Number of {} Reads Originating from (REF,ALT) Alleles">"#,
-        format_id, format_name
-    );
+    // validate cram input
+    if bam_path.ends_with("cram") && reads_format.as_str() == "bam" {
+        eprintln!("CRAM file is provided as input! Set foramat input to cram `--reads-format cram` and provide referecne fasta using `--reference <FASTA>`");
+        std::process::exit(0)
+    }
+
     #[cfg(not(target_os = "linux"))]
     if reads_format.as_str() == "cram" {
         eprintln!("CRAM format is supported only in Linux OS ");
@@ -259,7 +257,16 @@ fn main() {
         "cram" => cli.reference.unwrap(),
         _ => String::new(),
     };
-
+    let chunk_size = cli.chunksize.unwrap();
+    let num_threads = cli.threads.unwrap();
+    let min_count = cli.min_count.unwrap();
+    let min_mapq = cli.min_mapq.unwrap();
+    let format_id = cli.format_id.unwrap();
+    let format_name = cli.format_name.unwrap();
+    let new_format_line = format!(
+        r#"##FORMAT=<ID={},Number=.,Type=Integer,Description="Number of {} Reads Originating from (REF,ALT) Alleles">"#,
+        format_id, format_name
+    );
     // Configure the rayon thread pool with the desired number of threads
     ThreadPoolBuilder::new()
         .num_threads(num_threads)
