@@ -4,6 +4,8 @@ Rust Program to calculate haplotype-specific depth from BAM/CRAM files at positi
 ## Usage 
 
 ```text
+Program to calculate haplotype-specific depth from BAM/CRAM files at positions provided in a haplotype-resolved VCF file.
+
 Usage: snpdep [OPTIONS] --output <OUTPUT_VCF> <INPUT_VCF> <READS>
 
 Arguments:
@@ -22,7 +24,7 @@ Options:
       --min-count <MIN_COUNT>
           Minimum read coverage required at a position to be annotated [default: 1]
   -c, --chunksize <CHUNK_SIZE>
-          Number of SNPs processed by a thread each iteration [default: 1000000]
+          Number of SNPs processed by a thread each iteration [default: 1000]
       --format-field-id <FORMAT_ID>
           Unique ID for new VCF format field (e.g RNA, K4me3), max 5 characters [default: RC]
       --format-field-name <FORMAT_NAME>
