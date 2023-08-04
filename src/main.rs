@@ -116,7 +116,7 @@ struct Cli {
     #[arg(long = "min-count", value_name = "MIN_COUNT", default_value = "1")]
     min_count: Option<i32>,
     /// Number of SNPs processed by a thread each iteration.
-    #[arg(short, long, value_name = "CHUNK_SIZE", default_value = "1000000")]
+    #[arg(short, long, value_name = "CHUNK_SIZE", default_value = "1000")]
     chunksize: Option<usize>,
     /// Unique ID for new VCF format field (e.g RNA, K4me3), max 5 characters.
     #[arg(long="format-field-id", value_name = "FORMAT_ID", default_value = "RC",value_parser=clap::builder::ValueParser::new(validate_format_id))]
