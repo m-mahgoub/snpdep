@@ -91,7 +91,7 @@ struct Cli {
     #[arg(
         short = 'o',
         long = "output",
-        value_name = "OUTPUT_VCP",
+        value_name = "OUTPUT_VCF",
         required = true,
         value_parser=clap::builder::ValueParser::new(validate_vcf_file)
     )]
