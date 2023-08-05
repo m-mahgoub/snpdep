@@ -80,7 +80,8 @@ fn validate_unique_format_id(
 #[command(
     author,
     version,
-    about = "Program to calculate haplotype-specific depth from BAM/CRAM files at positions provided in a haplotype-resolved VCF file."
+    about = "Program to calculate haplotype-specific depth from BAM/CRAM files at positions provided in a haplotype-resolved VCF file.",
+    arg_required_else_help(true)
 )]
 struct Cli {
     /// Path to VCF file containing haplotype-resolved variants. Both uncompressed `.vcf` and compressed `.vcf.gz` files are supported
