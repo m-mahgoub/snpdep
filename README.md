@@ -31,8 +31,6 @@ The output VCF file will include a new format field tag for each record (user-de
 If the reads input file is in the CRAM format, the user must provide a path for the reference fasta `--reference <FASTA>` and specify the CRAM format option `--reads-format CRAM`. At present, CRAM format support is only available for the Linux OS.
 
 ```text
-Program to calculate haplotype-specific depth from BAM/CRAM files at positions provided in a genotype VCF file.
-
 Usage: snpdep [OPTIONS] --output <OUTPUT_VCF> <INPUT_VCF> <READS>
 
 Arguments:
