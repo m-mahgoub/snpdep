@@ -1,0 +1,14 @@
+{
+    "spellright.language": [
+        "en"
+    ],
+    "spellright.documentTypes": [
+        "latex",
+        "nextflow"
+    ],
+    "spellright.parserByClass": {
+        "nextflow": {
+            "parser": "plain"
+        }
+    }
+}
