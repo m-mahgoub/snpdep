@@ -20,7 +20,7 @@ use separator::Separatable;
 use std::{collections::BTreeMap, process, str, sync::Arc, sync::Mutex};
 
 // Define CLI validation Functions:
-// Function to validate bam/cram files from the cli arguments. CRAM files in MacOS will not be accepted
+// Function to validate BAM/CRAM files from the cli arguments. CRAM files in MacOS will not be accepted
 fn validate_bam_file(val: &str) -> Result<String, String> {
     #[cfg(target_os = "linux")]
     if val.to_lowercase().ends_with(".bam") | val.to_lowercase().ends_with(".cram") {
@@ -143,7 +143,7 @@ fn validate_unique_format_id(
 }
 
 // Define enum RecordData: this is just re-formatting a snp record
-// RecordData the output format from process_record() function, and will be passed in this new format to process_bam_data() function
+// RecordData is the output format from process_record() function, and will be passed in this new format to process_bam_data() function
 enum RecordData {
     Success {
         chr: String,
@@ -249,7 +249,7 @@ fn process_bam_data(
             }
         }
     }
-    // modify the record only if the total counts are more then min_count threshold
+    // modify the record only if the total counts are more than min_count threshold
     if ref_count + alt_count >= min_count {
         // reformat the counts to Vec<i32> as expected by push_format_integer() function
         // N.B: Because there is one sample, the flattened_array has one element (length of 1)
@@ -278,12 +278,12 @@ fn main() {
     // set whether output should be compressed or not
     let is_out_vcf_uncompressed: bool = out_vcf_path.to_lowercase().ends_with(".vcf");
     let reads_format = cli.reads_format.unwrap();
-    // if input is cram, force the usage of --reads-format & --reference
+    // if input is CRAM, force the usage of --reads-format & --reference
     if bam_path.ends_with("cram") && reads_format.as_str() == "bam" {
         eprintln!("CRAM file is provided as input! Set foramat input to cram `--reads-format cram` and provide referecne fasta using `--reference <FASTA>`");
         std::process::exit(0)
     }
-    // if input is cram in MacOS exit. There is a bug that leads to a segmentation error when trying to use cram in MacOS
+    // if input is CRAM in MacOS exit. There is a bug that leads to a segmentation error when trying to use cram in MacOS
     #[cfg(not(target_os = "linux"))]
     if reads_format.as_str() == "cram" {
         eprintln!("CRAM format is supported only in Linux OS ");
@@ -313,8 +313,8 @@ fn main() {
     // Validate uniqueness of Format ID. It will exit if validation failed
     validate_unique_format_id(&bcf_header_view, &format_id);
     let mut out_vcf_header = bcfHeader::from_template(bcf_header_view);
-    // confirm the new header ID is not already present
     out_vcf_header.push_record(new_format_line.as_bytes());
+    // Define the output VCF file. Compression is determined based on is_out_vcf_uncompressed value inferred from CLI
     let mut out_vcf =
         bcfWriter::from_path(out_vcf_path, &out_vcf_header, is_out_vcf_uncompressed, Vcf).unwrap();
 
@@ -348,9 +348,9 @@ fn main() {
     // A thread will iterate over records in a chunk and insert each processed record in the records BTreeMap
     // After a thread consumes all records in a chunk it will:
     // (1) lock all_chunks_map
-    // (2) insert the the records BTreeMap in all_chunks_map
+    // (2) insert records BTreeMap in all_chunks_map
     // (3) Unlock all_chunks_map
-    // (4) destroy current chunk records BTreeMap
+    // (4) destroy current chunk records BTreeMap to free memory
     // (5) move on to process anther chunk
     // BTreeMap was chosen over HashMap because BTreeMap is sorted by its keys. This ensures the the records are sorted in the output vcf file
     let all_chunks_map: Arc<
@@ -452,7 +452,7 @@ fn main() {
     pb1.finish_with_message("Annotation Done!");
     // now lock the all_chunks_map, and iterate over it to write new records into the new vcf file
     let all_chunks_map_lock = &*all_chunks_map.lock().unwrap();
-    // add new progress bar for records' writing
+    // initiate progress bar (2) for records' writing
     let pb2 = ProgressBar::new(records.len().try_into().unwrap());
     pb2.set_style(sty.clone());
     pb2.set_message("Writing Records");

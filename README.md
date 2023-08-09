@@ -61,3 +61,45 @@ Options:
   -V, --version
           Print version
 ```
+
+## Example: Haplotype-Specific RNA-Seq Read Counting
+This is a mini-test example for counting haplotype-specific RNA-seq reads at each biallelic position within a sample. Follow the steps below to download the required software and test data, then execute the analysis using different options.
+#### Step 1: Download and Install snpdep
+First, download the `snpdep` executable and add it to your system `$PATH`.
+```bash
+mkdir test
+cd test
+wget https://github.com/m-mahgoub/snpdep/releases/download/v0.1.0-alpha/snpdep_v0.1.0-alpha_linux.tar.gz
+tar -xvf snpdep_v0.1.0-alpha_linux.tar.gz
+chmod +x linux/snpdep
+export PATH=$PATH:$PWD/linux
+```
+#### Step 2: Download Test Data
+You will need the AWS Command Line Interface (CLI) installed to download the test data from AWS S3
+```bash
+aws s3 cp s3://davidspencerlab/test_data/snpdep/ . --recursive
+```
+#### Step 3: Execute Analysis
+You can run snpdep with different options as demonstrated below.
+
+3.1 Run with Default Parameters
+```bash
+snpdep --output output.vcf test.vcf test.bam
+```
+3.2 Run with CRAM Reads as Input
+```bash
+snpdep --reads-format cram --reference hg38.fa --output output.vcf test.vcf test.cram
+```
+3.3 Run with Multiple Options
+```bash
+snpdep \
+--threads 4 \             # Use 4 threads
+--chunksize 10 \          # Chunk size of 10 (thread will process 10 VCF records per iteration)
+--format-field-id K4me3 \  # Format-ID that will be added in the record's format field
+--format-field-name "H3K4me3 ChIPseq" \ # Format Description that will be added in the header
+--reads-format cram \     # Input reads format
+--reference hg38.fa \     # Reference FASTA file
+--output output.vcf.gz \  # Output file (using `.gz` will automatically compress it)
+test.vcf \
+test.cram
+```
