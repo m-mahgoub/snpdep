@@ -38,7 +38,7 @@ fn validate_bam_file(val: &str) -> Result<String, String> {
     }
 }
 
-// Function to validate VCF file from the cli arguments.
+// Function to validate VCF file from the cli arguments
 fn validate_vcf_file(val: &str) -> Result<String, String> {
     if val.to_lowercase().ends_with(".vcf") | val.to_lowercase().ends_with("vcf.gz") {
         Ok(val.to_string())
@@ -47,7 +47,7 @@ fn validate_vcf_file(val: &str) -> Result<String, String> {
     }
 }
 
-// Function to validate format id from the cli arguments to ensure it is not more than 5 characters. Long characters can take a lot of space in the new annotated vcf output.
+// Function to validate format id from the cli arguments to ensure it is not more than 5 characters. Long characters can take a lot of space in the new annotated vcf output
 fn validate_format_id(val: &str) -> Result<String, String> {
     if val.len() <= 5 {
         Ok(val.to_string())
@@ -67,10 +67,10 @@ struct Cli {
     /// Path to VCF file containing sample genotype. Both uncompressed `.vcf` and compressed `.vcf.gz` files are supported
     #[arg(value_name = "INPUT_VCF", required = true, index = 1, value_parser=clap::builder::ValueParser::new(validate_vcf_file))]
     input_vcf: Option<String>,
-    /// Path to BAM/CRAM reads file.
+    /// Path to BAM/CRAM reads file
     #[arg(value_name = "READS",required=true, index=2,value_parser=clap::builder::ValueParser::new(validate_bam_file))]
     reads: Option<String>,
-    /// Path to the output annotated VCF file. Compression will be inferred from the file extension: `.vcf` for uncompressed and `.vcf.gz` for compressed output.
+    /// Path to the output annotated VCF file. Compression will be inferred from the file extension: `.vcf` for uncompressed and `.vcf.gz` for compressed output
     #[arg(
         short = 'o',
         long = "output",
@@ -79,10 +79,10 @@ struct Cli {
         value_parser=clap::builder::ValueParser::new(validate_vcf_file)
     )]
     output_vcf: Option<String>,
-    /// Specifies the reads file format.
+    /// Specifies the reads file format
     #[arg(short='f', long="reads-format", value_name = "READS_FORMAT", value_parser=["bam","cram"], default_value="bam")]
     reads_format: Option<String>,
-    /// Path to the reference FASTA file (required if `--reads-format cram`).
+    /// Path to the reference FASTA file (required if `--reads-format cram`)
     #[arg(
         short,
         long,
@@ -90,19 +90,19 @@ struct Cli {
         required_if_eq("reads_format", "cram")
     )]
     reference: Option<String>,
-    /// Minimum read mapping quality (MAPQ) filtration threshold.
+    /// Minimum read mapping quality (MAPQ) filtration threshold
     #[arg(long = "min-mapq", value_name = "MIN_MAPQ", default_value = "1")]
     min_mapq: Option<u8>,
-    /// Minimum read coverage required at a position to be annotated. if set to 0, all positions will be annotated.
+    /// Minimum read coverage required at a position to be annotated. if set to 0, all positions will be annotated
     #[arg(long = "min-count", value_name = "MIN_COUNT", default_value = "1")]
     min_count: Option<i32>,
-    /// Number of SNPs processed by a thread in each iteration.
+    /// Number of SNPs processed by a thread in each iteration
     #[arg(short, long, value_name = "CHUNK_SIZE", default_value = "1000")]
     chunksize: Option<usize>,
-    /// Unique ID for the new VCF format field (e.g RNA, K4me3), max 5 characters.
+    /// Unique ID for the new VCF format field (e.g RNA, K4me3), max 5 characters
     #[arg(long="format-field-id", value_name = "FORMAT_ID", default_value = "RC",value_parser=clap::builder::ValueParser::new(validate_format_id))]
     format_id: Option<String>,
-    /// Short description for new VCF format field (e.g RNAseq, H3K4me3).
+    /// Short description for new VCF format field (e.g RNAseq, H3K4me3)
     #[arg(
         long = "format-field-name",
         value_name = "FORMAT_NAME",
@@ -110,14 +110,14 @@ struct Cli {
     )]
     format_name: Option<String>,
 
-    /// Number of threads to use.
+    /// Number of threads to use
     #[arg(short, long, value_name = "NUM_THREADS", default_value = "1")]
     threads: Option<usize>,
 }
 
-// Define Functions provoked in main()
-// Function to validate that user provided format id is not already existing in the input vcf file.
-// If provided id already exits the program will exit.
+// Define Functions invoked in main()
+// Function to validate that user provided format id is not already existing in the input vcf file
+// If provided id already exists the program will exit
 fn validate_unique_format_id(
     bcf_header_view: &rust_htslib::bcf::header::HeaderView,
     format_id: &str,
@@ -142,7 +142,7 @@ fn validate_unique_format_id(
     }
 }
 
-// Define enum RecordData: this is just re-formatting a snp record.
+// Define enum RecordData: this is just re-formatting a snp record
 // RecordData the output format from process_record() function, and will be passed in this new format to process_bam_data() function
 enum RecordData {
     Success {
@@ -186,9 +186,9 @@ fn process_record(record: &rust_htslib::bcf::record::Record) -> Result<RecordDat
     })
 }
 
-// This is the main logic of the whole analysis.
-// It will take (1) a snp record and (2) bam file reader. It will then count the reads supporting the ref and alt alleles.
-// The function will return modified record (rust_htslib::bcf::record::Record) by adding new foramt id in the format field and alleles count in the sample field.
+// This is the main logic of the whole analysis
+// It will take (1) a snp record and (2) bam file reader. It will then count the reads supporting the ref and alt alleles
+// The function will return modified record (rust_htslib::bcf::record::Record) by adding new format id in the format field and alleles count in the sample field
 fn process_bam_data(
     // indexed bam reader
     bam: &mut rust_htslib::bam::IndexedReader,
@@ -202,14 +202,14 @@ fn process_bam_data(
     alt_allele_str: &str,
     // record as `rust_htslib::bcf::record::Record` Struct
     record: &mut rust_htslib::bcf::record::Record,
-    // out vcf writer defined within the scope of a single thread.
+    // out vcf writer defined within the scope of a single thread
     // It is similar to input vcf writer, only with a modified header (+ new format field header appended)
     chunk_vcf: &mut rust_htslib::bcf::Writer,
-    // new format id provided by the cli
+    // new format id provided by the CLI
     format_id: &str,
-    // minimum mapq provided by cli
+    // minimum mapq provided by CLI
     min_mapq: u8,
-    // minimum reads count to annotate the record, provided by cli
+    // minimum reads count to annotate the record, provided by CLI
     min_count: i32,
 ) -> Result<rust_htslib::bcf::record::Record, &'static str> {
     // fetch bam region overlapping the snp
@@ -231,7 +231,7 @@ fn process_bam_data(
                     && alignment.record().mapq() >= min_mapq
                 {
                     let bam_record: rust_htslib::bam::Record = alignment.record();
-                    // extract the nucleotide in the query position in the current bam record, then add it to the ref/alt counts if matches either.
+                    // extract the nucleotide in the query position in the current bam record, then add it to the ref/alt counts if matches either
                     for ref_pos in bam_record.reference_positions() {
                         if ref_pos == pos {
                             let read_pos = alignment.qpos().unwrap();
@@ -249,7 +249,7 @@ fn process_bam_data(
             }
         }
     }
-    // modify the record only if the total counts are more then min_count threshold.
+    // modify the record only if the total counts are more then min_count threshold
     if ref_count + alt_count >= min_count {
         // reformat the counts to Vec<i32> as expected by push_format_integer() function
         // N.B: Because there is one sample, the flattened_array has one element (length of 1)
@@ -278,12 +278,12 @@ fn main() {
     // set whether output should be compressed or not
     let is_out_vcf_uncompressed: bool = out_vcf_path.to_lowercase().ends_with(".vcf");
     let reads_format = cli.reads_format.unwrap();
-    // if input in cram, force the usage of --reads-format & --reference
+    // if input is cram, force the usage of --reads-format & --reference
     if bam_path.ends_with("cram") && reads_format.as_str() == "bam" {
         eprintln!("CRAM file is provided as input! Set foramat input to cram `--reads-format cram` and provide referecne fasta using `--reference <FASTA>`");
         std::process::exit(0)
     }
-    // if input is cram in MaOS exit. There is a bug that leads to a segmentation error when trying to use cram in MacOS.
+    // if input is cram in MacOS exit. There is a bug that leads to a segmentation error when trying to use cram in MacOS
     #[cfg(not(target_os = "linux"))]
     if reads_format.as_str() == "cram" {
         eprintln!("CRAM format is supported only in Linux OS ");
@@ -319,7 +319,7 @@ fn main() {
         bcfWriter::from_path(out_vcf_path, &out_vcf_header, is_out_vcf_uncompressed, Vcf).unwrap();
 
     let mut records: Vec<_> = bcf_reader.records().collect::<Vec<_>>();
-    // Print a start message.
+    // Print a start message
     println!("");
     println!("Using {} Threads", num_threads);
     println!(
@@ -345,14 +345,14 @@ fn main() {
     // all_chunks_map is Arc<Mutex<_>> type. This is because it will be shared by multiple threads and should be locked/unlocked to allow exactly one thread to gain access to it at a time
     // In all_chunks_map the keys are chunk numbers and values are BTreeMap of records (keys: record number, values: records)
     // One nested BTreeMap is the result of one thread processing a chunk of records. This nested BTreeMap (records BTreeMap) is defined in the scope of the thread
-    // A thread will iterate over records in a chunk and insert each processed record in the records BTreeMap.
+    // A thread will iterate over records in a chunk and insert each processed record in the records BTreeMap
     // After a thread consumes all records in a chunk it will:
     // (1) lock all_chunks_map
     // (2) insert the the records BTreeMap in all_chunks_map
     // (3) Unlock all_chunks_map
     // (4) destroy current chunk records BTreeMap
     // (5) move on to process anther chunk
-    // BTreeMap was chosen over HashMap because BTreeMap is sorted by its keys. This ensures the the records are sorted in the output vcf file.
+    // BTreeMap was chosen over HashMap because BTreeMap is sorted by its keys. This ensures the the records are sorted in the output vcf file
     let all_chunks_map: Arc<
         Mutex<BTreeMap<usize, BTreeMap<usize, rust_htslib::bcf::record::Record>>>,
     > = Arc::new(Mutex::new(BTreeMap::new()));
@@ -365,7 +365,7 @@ fn main() {
         .num_threads(num_threads)
         .build_global()
         .unwrap();
-    // Iterate over vcf records in chunks. Multithreading is provoked in this loop by par_iter_mut(). Each chunk will be passed to a thread in the above defined ThreadPool
+    // Iterate over VCF records in chunks. Multithreading is invoked in this loop by par_iter_mut(). Each chunk will be passed to a thread in the above-defined ThreadPool
     chunks
         .collect::<Vec<_>>()
         .par_iter_mut()
@@ -429,7 +429,7 @@ fn main() {
                 if chunk_records == chunk_size {
                     let mut records_count_lock = records_count.lock().unwrap();
                     *records_count_lock += chunk_size;
-                    // print to stout if progress bar is suppressed
+                    // print to stdout if progress bar is suppressed
                     if mpb.is_hidden() {
                         println!(
                             "{} Records Processed",
