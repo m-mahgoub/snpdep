@@ -100,6 +100,6 @@ snpdep  \
 --reads-format cram                    `# Input reads format` \
 --reference hg38.fa                    `# Reference FASTA file` \
 --output output.vcf.gz                 `# Output file (using ".gz" will automatically compress it)` \
-test.vcf  \                            `# input vcf (positional)` \
+test.vcf                               `# input vcf (positional)` \
 test.cram                              `# input reads (positional)`
 ```
