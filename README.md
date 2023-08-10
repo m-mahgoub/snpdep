@@ -93,13 +93,13 @@ snpdep --reads-format cram --reference hg38.fa --output output.vcf test.vcf test
 3.3 Run with Multiple Options
 ```bash
 snpdep  \
---threads 4                            `# Use 4 threads` \
---chunksize 10                         `# Chunk size of 10 (thread will process 10 VCF records per iteration)` \
---format-field-id K4me3                `# Format-ID that will be added in the record's format field` \
---format-field-name "H3K4me3 ChIPseq"  `# Format Description that will be added in the header` \
---reads-format cram                    `# Input reads format` \
---reference hg38.fa                    `# Reference FASTA file` \
---output output.vcf.gz                 `# Output file (using ".gz" will automatically compress it)` \
-test.vcf                               `# input vcf (positional)` \
-test.cram                              `# input reads (positional)`
+--threads 4                             `# Use 4 threads` \
+--chunksize 10                          `# Chunk size of 10 (thread will process 10 VCF records per iteration)` \
+--format-field-id RNA                   `# Format-ID that will be added in the record's format field` \
+--format-field-name "Diagnosis RNAseq"  `# Format Description that will be added in the header` \
+--reads-format cram                     `# Input reads format` \
+--reference hg38.fa                     `# Reference FASTA file` \
+--output output.vcf.gz                  `# Output file (using ".gz" will automatically compress it)` \
+test.vcf                                `# input vcf (positional)` \
+test.cram                               `# input reads (positional)`
 ```
