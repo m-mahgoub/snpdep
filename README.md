@@ -20,7 +20,7 @@ cargo install --git https://github.com/m-mahgoub/snpdep.git
 
 ## Usage
 
-To run, snpdep requires (1) a genotype VCF file and (2) a BAM/CRAM reads file. It then calculates the number of reads supporting each allele. Typically, the genotype VCF file is produced by calling germline variants from Whole Genome Sequencing reads on the sample to be examined with the BAM/CRAM read count. The BAM/CRAM can be of any "functional" data type, such as RNAseq, ChIP-seq, CUT&TAG, ATACseq, etc., for which haplotype-specific reads are required. This proves useful when investigating haplotype bias in these datasets.
+To run, snpdep requires (1) a genotype VCF file and (2) a BAM/CRAM reads file. It then calculates the number of reads supporting each allele for each VCF record. Typically, the genotype VCF file is produced by calling germline variants from Whole Genome Sequencing reads on the sample to be examined with the BAM/CRAM read count. The BAM/CRAM can be of any "functional" data type, such as RNAseq, ChIP-seq, CUT&TAG, ATACseq, etc., for which haplotype-specific reads are required. This proves useful when investigating haplotype bias in these datasets. BAM/CRAM files must be accompanied by their corresponding indexes, which are denoted by the extensions `.bam.bai` or `.cram.crai`, respectively. These index files should be located in the same directory as the `.bam` or `.cram` files.
 
 While not mandatory, the usage of a haplotype-resolved VCF file as input is highly recommended. This is because it provides additional insight for studying haplotype bias across multiple functional datasets, such as DNA methylation vs. gene expression or chromatin accessibility.
 
