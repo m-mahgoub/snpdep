@@ -17,8 +17,7 @@ use rust_htslib::bcf::{
 };
 
 use separator::Separatable;
-use std::{collections::BTreeMap, process, str, sync::Arc, sync::Mutex};
-
+use std::{collections::BTreeMap, collections::HashMap, process, str, sync::Arc, sync::Mutex};
 // Define CLI validation Functions:
 // Function to validate BAM/CRAM files from the cli arguments. CRAM files in MacOS will not be accepted
 fn validate_bam_file(val: &str) -> Result<String, String> {
@@ -189,6 +188,13 @@ fn process_record(record: &rust_htslib::bcf::record::Record) -> Result<RecordDat
 // This is the main logic of the whole analysis
 // It will take (1) a snp record and (2) bam file reader. It will then count the reads supporting the ref and alt alleles
 // The function will return modified record (rust_htslib::bcf::record::Record) by adding new format id in the format field and alleles count in the sample field
+// make new vector for quality and allele for the read
+#[derive(Debug)]
+enum PosInfo {
+    Quality(u8),
+    Allele(String),
+}
+
 fn process_bam_data(
     // indexed bam reader
     bam: &mut rust_htslib::bam::IndexedReader,
@@ -215,6 +221,7 @@ fn process_bam_data(
     // fetch bam region overlapping the snp
     let _ = bam.fetch((chr, pos, pos + 1));
     // set ref/alt counts to 0
+    let mut counts_map = HashMap::new();
     let mut ref_count = 0;
     let mut alt_count = 0;
     // iterate over pileups in the fetched bam region
@@ -231,24 +238,85 @@ fn process_bam_data(
                     && alignment.record().mapq() >= min_mapq
                 {
                     let bam_record: rust_htslib::bam::Record = alignment.record();
+                    let bam_record_name = std::str::from_utf8(bam_record.qname()).unwrap();
                     // extract the nucleotide in the query position in the current bam record, then add it to the ref/alt counts if matches either
                     for ref_pos in bam_record.reference_positions() {
                         if ref_pos == pos {
                             let read_pos = alignment.qpos().unwrap();
                             let pos_seq_byte = bam_record.seq()[read_pos];
+                            let pos_qual = bam_record.qual()[read_pos] as u8;
                             let pos_seq_str =
                                 std::str::from_utf8(&[pos_seq_byte]).unwrap().to_string();
-                            if pos_seq_str == ref_allele_str {
-                                ref_count = ref_count + 1;
-                            } else if pos_seq_str == alt_allele_str {
-                                alt_count = alt_count + 1;
-                            }
+                            let mut matching_allele: &str = match pos_seq_str.clone() {
+                                x if x == ref_allele_str => "ref",
+                                x if x == alt_allele_str => "alt",
+                                _ => "neither",
+                            };
+
+                            let mut pos_info: Vec<PosInfo> = Vec::new();
+                            pos_info.push(PosInfo::Quality(pos_qual));
+                            pos_info.push(PosInfo::Allele(matching_allele.to_string()));
+                            // let post_info = vec![pos_qual, matching_allele];
+                            // check if there is another read with better quality
+                            counts_map
+                                .entry(bam_record_name.to_owned())
+                                .or_insert(Vec::new())
+                                .push(pos_info)
+                            // if counts_map.contains_key(bam_record_name) {
+                            //     counts_map.insert(bam_record_name.to_owned(), pos_info);
+                            // }
+
+                            // println!("{matching_allele},{pos_seq_str}");
+                            // if pos_seq_str == ref_allele_str {
+                            //     // ref_count = ref_count + 1;
+                            // } else if pos_seq_str == alt_allele_str {
+                            //     // alt_count = alt_count + 1;
+                            // }
                         }
                     }
                 }
             }
         }
     }
+    for (key, value) in &counts_map {
+        let mut used_qual: u8 = 0;
+        let mut used_allele = "neither";
+        // println!("Key: {}", key);
+        for pair_info in value {
+            let pair_qual = match pair_info.get(0).unwrap() {
+                PosInfo::Quality(q) => q,
+                _ => &used_qual,
+            };
+            let pair_allele = match pair_info.get(1).unwrap() {
+                PosInfo::Allele(a) => a,
+                _ => "neither",
+            };
+            if pair_qual > &used_qual {
+                used_allele = pair_allele;
+                used_qual = *pair_qual
+            }
+        }
+        match used_allele {
+            "ref" => ref_count += 1,
+            "alt" => alt_count += 1,
+            _ => (),
+        }
+        // if used_allele == "ref" {
+        //     ref_count += 1
+        // } else if used_allele == alt_allele_str {
+        //     alt_count += 1
+        // }
+        // println!("{:?}::{:?}", used_allele, used_qual);
+        // println!(); // Just to separate different keys in output
+    }
+    // println!("{:?}::{:?}", ref_count, alt_count);
+    // for (key, value) in &counts_map {
+    //     let mut qual = 0;
+    //     let mut allele = "neither";
+    //     for pair_info in value.into_iter() {
+    //         println!("{:?}", pair_info)
+    //     }
+    // }
     // modify the record only if the total counts are more than min_count threshold
     if ref_count + alt_count >= min_count {
         // reformat the counts to Vec<i32> as expected by push_format_integer() function
